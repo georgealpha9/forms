@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero">
+    <h1 class="hero-title">Welcome to Forms Builder</h1>
+    <p class="hero-subtitle">
+        A powerful form builder and renderer with Django backend integration
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <a href="{% url 'builder' %}" class="btn">Open Form Builder</a>
+        <a href="{% url 'admin:index' %}" class="btn btn-secondary">Go to Admin</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="cards">
+        <div class="card">
+            <div class="card-title">🎨 Form Builder</div>
+            <p class="card-text">
+                Create forms visually using drag-and-drop. Configure fields, validation rules,
+                and conditional logic without writing code.
+            </p>
+            <a href="{% url 'builder' %}" class="btn">Start Building</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📋 Form Management</div>
+            <p class="card-text">
+                Manage all your forms, view submissions, and configure settings through
+                the Django admin interface.
+            </p>
+            <a href="{% url 'admin:forms_builder_formdefinition_changelist' %}" class="btn">Manage Forms</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📊 Submissions</div>
+            <p class="card-text">
+                View and export form submissions. Track user data, timestamps, and
+                analyze response patterns.
+            </p>
+            <a href="{% url 'admin:forms_builder_formsubmission_changelist' %}" class="btn">View Submissions</a>
+        </div>
+    </div>
+
+    <div class="features">
+        <h2 class="features-title">Key Features</h2>
+        <div class="feature-list">
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-content">
+                    <h3>Drag & Drop Builder</h3>
+                    <p>Intuitive interface for creating forms without coding</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <div class="feature-content">
+                    <h3>Multiple Field Types</h3>
+                    <p>Text, email, number, textarea, and more</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-content">
+                    <h3>Multi-Step Wizards</h3>
+                    <p>Create complex forms with multiple steps and navigation</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-content">
+                    <h3>Conditional Logic</h3>
+                    <p>Show/hide fields based on user responses using JSONLogic</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <div class="feature-content">
+                    <h3>Validation</h3>
+                    <p>Built-in and custom validation rules</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">♿</div>
+                <div class="feature-content">
+                    <h3>Accessible</h3>
+                    <p>WCAG compliant with ARIA support</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-content">
+                    <h3>Secure</h3>
+                    <p>Django backend with CSRF protection and validation</p>
+                </div>
+            </div>
+
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <div class="feature-content">
+                    <h3>Data Storage</h3>
+                    <p>All submissions stored in Django database</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 4rem; padding: 2rem; background: white; border-radius: 0.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">Quick Start Guide</h2>
+
+        <ol style="line-height: 2; color: #374151;">
+            <li><strong>Create a Form:</strong> Use the <a href="{% url 'builder' %}" style="color: #3b82f6;">Form Builder</a> to design your form with drag-and-drop</li>
+            <li><strong>Export JSON:</strong> Click "Export Form JSON" to download your form definition</li>
+            <li><strong>Import to Admin:</strong> Go to <a href="{% url 'admin:forms_builder_formdefinition_add' %}" style="color: #3b82f6;">Django Admin</a> and create a new Form Definition</li>
+            <li><strong>Paste JSON:</strong> Paste the exported JSON into the "Definition" field</li>
+            <li><strong>Save & Activate:</strong> Save the form and make sure "Is active" is checked</li>
+            <li><strong>View Form:</strong> Visit <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">/renderer/your-form-id/</code> to see your live form</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

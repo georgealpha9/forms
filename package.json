@@ -1,0 +1,18 @@
+{
+  "name": "@forms-poc/root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:builder": "npm run dev -w @forms-poc/builder",
+    "dev:renderer": "npm run dev -w @forms-poc/renderer",
+    "build:all": "npm run build --workspaces",
+    "test:all": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  }
+}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        border: 1px solid #10b981;
+        color: #065f46;
+    }
+
+    .alert-error {
+        background-color: #fee2e2;
+        border: 1px solid #ef4444;
+        color: #991b1b;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 4rem;
+        color: #6b7280;
+    }
+
+    .spinner {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #3b82f6;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+
+    <div id="alert-container"></div>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading form...</p>
+    </div>
+
+    <div class="form-container" id="form-container" style="display: none;">
+        <form-renderer id="form-renderer"></form-renderer>
+    </div>
+</div>
+
+<!-- Load the form renderer component -->
+<script type="module">
+    // In production, this would point to the built bundle
+    import '../../../packages/renderer/src/components/form-renderer.js';
+
+    // Get form ID from URL
+    const formId = '{{ request.resolver_match.kwargs.form_id }}';
+    const formRenderer = document.getElementById('form-renderer');
+    const loading = document.getElementById('loading');
+    const formContainer = document.getElementById('form-container');
+    const alertContainer = document.getElementById('alert-container');
+
+    // Function to show alerts
+    function showAlert(message, type = 'success') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alert);
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+
+    // Load form definition from API
+    async function loadForm() {
+        try {
+            const response = await fetch(`/forms/api/forms/${formId}/`);
+
+            if (!response.ok) {
+                throw new Error('Form not found');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.form) {
+                // Set form definition
+                formRenderer.definition = data.form;
+
+                // Show form, hide loading
+                loading.style.display = 'none';
+                formContainer.style.display = 'block';
+            } else {
+                throw new Error('Invalid form data');
+            }
+        } catch (error) {
+            loading.innerHTML = `
+                <p style="color: #dc2626;">Error loading form: ${error.message}</p>
+                <p style="margin-top: 1rem;">
+                    <a href="{% url 'admin:forms_builder_formdefinition_changelist' %}" class="btn">
+                        View Forms in Admin
+                    </a>
+                </p>
+            `;
+        }
+    }
+
+    // Handle form submission
+    formRenderer.addEventListener('form-submit', async (event) => {
+        const formData = event.detail.data;
+
+        try {
+            const response = await fetch(`/forms/api/forms/${formId}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('Form submitted successfully! Thank you for your response.', 'success');
+
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showAlert('Error submitting form: ' + (result.errors?.[0]?.message || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            showAlert('Network error: ' + error.message, 'error');
+        }
+    });
+
+    // Helper to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Load form on page load
+    loadForm();
+</script>
+{% endblock %}

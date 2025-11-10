@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Renderer Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <form-renderer id="demo-form"></form-renderer>
+
+  <script type="module">
+    import './src/components/form-renderer';
+
+    // Example form definition
+    const formDefinition = {
+      id: 'contact-form',
+      title: 'Contact Information',
+      description: 'Please provide your contact details',
+      isMultiStep: true,
+      steps: [
+        {
+          id: 'step-1',
+          title: 'Personal Information',
+          description: 'Tell us about yourself',
+          order: 0,
+          fields: [
+            {
+              id: 'name',
+              type: 'text',
+              name: 'name',
+              label: 'Full Name',
+              placeholder: 'John Doe',
+              required: true,
+              validation: [
+                {
+                  type: 'required',
+                  message: 'Name is required'
+                },
+                {
+                  type: 'min',
+                  value: 2,
+                  message: 'Name must be at least 2 characters'
+                }
+              ]
+            },
+            {
+              id: 'email',
+              type: 'email',
+              name: 'email',
+              label: 'Email Address',
+              placeholder: 'john@example.com',
+              required: true,
+              validation: [
+                {
+                  type: 'required',
+                  message: 'Email is required'
+                },
+                {
+                  type: 'email',
+                  message: 'Please enter a valid email address'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'step-2',
+          title: 'Additional Details',
+          description: 'Tell us more',
+          order: 1,
+          fields: [
+            {
+              id: 'age',
+              type: 'number',
+              name: 'age',
+              label: 'Age',
+              placeholder: '25',
+              min: 18,
+              max: 120,
+              validation: [
+                {
+                  type: 'min',
+                  value: 18,
+                  message: 'You must be at least 18 years old'
+                }
+              ]
+            },
+            {
+              id: 'message',
+              type: 'textarea',
+              name: 'message',
+              label: 'Message',
+              placeholder: 'Tell us something...',
+              rows: 4,
+              helpText: 'Optional: Share any additional information'
+            }
+          ]
+        }
+      ]
+    };
+
+    const formElement = document.getElementById('demo-form');
+    formElement.definition = formDefinition;
+
+    // Handle form submission
+    formElement.addEventListener('form-submit', (event) => {
+      console.log('Form submitted:', event.detail.data);
+      alert('Form submitted! Check console for data.');
+    });
+  </script>
+</body>
+</html>
