@@ -8,7 +8,8 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['lit', '@forms-poc/shared']
+      // Bundle all dependencies for standalone usage in Django
+      external: []
     }
   }
 });

@@ -1,14 +1,25 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { FormField, TextField, EmailField, NumberField, TextareaField } from '@forms-poc/shared';
+import type { FormField, TextField, NumberField, TextareaField } from '@forms-poc/shared';
 
 /**
  * Field property editor
  */
 @customElement('field-editor')
 export class FieldEditor extends LitElement {
-  @property({ type: Object })
-  field: FormField | null = null;
+  @property({ attribute: false })
+  set field(value: FormField | null) {
+    const oldValue = this._field;
+    this._field = value;
+    console.log('Field property set:', value);
+    this.requestUpdate('field', oldValue);
+  }
+
+  get field(): FormField | null {
+    return this._field;
+  }
+
+  private _field: FormField | null = null;
 
   static styles = css`
     :host {
@@ -310,6 +321,8 @@ export class FieldEditor extends LitElement {
   }
 
   render() {
+    console.log('FieldEditor render, field:', this.field);
+
     if (!this.field) {
       return html`
         <div class="editor-header">Field Properties</div>

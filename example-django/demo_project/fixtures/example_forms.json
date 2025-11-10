@@ -7,6 +7,8 @@
       "description": "Get in touch with us",
       "is_multi_step": false,
       "is_active": true,
+      "created_at": "2025-01-01T10:00:00Z",
+      "updated_at": "2025-01-01T10:00:00Z",
       "definition": {
         "id": "contact-form",
         "title": "Contact Form",
@@ -91,6 +93,8 @@
       "description": "Create your account",
       "is_multi_step": true,
       "is_active": true,
+      "created_at": "2025-01-02T10:00:00Z",
+      "updated_at": "2025-01-02T10:00:00Z",
       "definition": {
         "id": "registration-form",
         "title": "User Registration",
@@ -210,6 +214,8 @@
       "description": "Help us improve our service",
       "is_multi_step": true,
       "is_active": true,
+      "created_at": "2025-01-03T10:00:00Z",
+      "updated_at": "2025-01-03T10:00:00Z",
       "definition": {
         "id": "survey-form",
         "title": "Customer Satisfaction Survey",

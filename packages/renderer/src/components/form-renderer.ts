@@ -208,6 +208,8 @@ export class FormRenderer extends LitElement {
 
     if (!validation.valid) {
       this.errors = validation.errors;
+      console.log('Validation failed:', validation.errors);
+      this.requestUpdate();
       return;
     }
 
@@ -216,6 +218,7 @@ export class FormRenderer extends LitElement {
 
     if (this.currentStepIndex < visibleSteps.length - 1) {
       this.currentStepIndex++;
+      this.requestUpdate();
     }
   }
 
@@ -223,6 +226,7 @@ export class FormRenderer extends LitElement {
     if (this.currentStepIndex > 0) {
       this.currentStepIndex--;
       this.errors = [];
+      this.requestUpdate();
     }
   }
 

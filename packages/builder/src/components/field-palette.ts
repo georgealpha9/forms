@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import type { FieldType } from '@forms-poc/shared';
 
 interface FieldTypeInfo {
@@ -133,6 +133,17 @@ export class FieldPalette extends LitElement {
     target.classList.remove('dragging');
   }
 
+  private handleClick(event: PointerEvent, fieldType: FieldType) {
+    const target = event.currentTarget as HTMLElement;
+    console.log('Field clicked:', fieldType, target);
+    this.dispatchEvent(new CustomEvent('field-click', {
+      detail: { fieldType },
+      bubbles: true,
+      composed: true
+    }));
+
+  }
+
   render() {
     return html`
       <div class="palette-header">Field Types</div>
@@ -143,6 +154,7 @@ export class FieldPalette extends LitElement {
             draggable="true"
             @dragstart="${(e: DragEvent) => this.handleDragStart(e, fieldInfo.type)}"
             @dragend="${this.handleDragEnd}"
+            @click="${(e: PointerEvent) => this.handleClick(e, fieldInfo.type)}"
           >
             <div class="field-icon">${fieldInfo.icon}</div>
             <div class="field-info">

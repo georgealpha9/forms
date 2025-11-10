@@ -6,6 +6,14 @@ import type { FormField, ValidationRule, ValidationResult, ValidationError, Form
 export function validateField(field: FormField, value: any): ValidationError[] {
   const errors: ValidationError[] = [];
 
+  // Check basic required field validation even without explicit rules
+  if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+    errors.push({
+      field: field.name,
+      message: `${field.label} is required`
+    });
+  }
+
   if (!field.validation) {
     return errors;
   }

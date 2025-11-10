@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from .models import FormDefinition, FormSubmission
 from .validation import validate_form
 import json
@@ -114,3 +114,12 @@ class FormValidationView(View):
                 'valid': False,
                 'errors': [{'field': '_form', 'message': str(e)}]
             }, status=500)
+
+
+def form_preview(request, form_id):
+    """Render form preview page"""
+    form = get_object_or_404(FormDefinition, id=form_id)
+    return render(request, 'forms_builder/form_preview.html', {
+        'form': form,
+        'form_definition_json': json.dumps(form.definition)
+    })

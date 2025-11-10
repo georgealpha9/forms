@@ -8,7 +8,8 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['lit', '@forms-poc/shared', '@forms-poc/renderer', '@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities']
+      // Bundle all dependencies for standalone usage in Django
+      external: []
     }
   }
 });

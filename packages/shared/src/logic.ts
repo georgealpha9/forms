@@ -20,12 +20,12 @@ export function evaluateLogic(logic: RulesLogic, data: FormData): boolean {
 export function nodeToJsonLogic(node: LogicNode): RulesLogic {
   if (node.operator === 'and' || node.operator === 'or') {
     const children = node.children?.map(nodeToJsonLogic) || [];
-    return { [node.operator]: children };
+    return { [node.operator]: children } as RulesLogic;
   }
 
   if (node.operator === 'not') {
     const child = node.children?.[0];
-    return { '!': child ? nodeToJsonLogic(child) : null };
+    return { '!': child ? nodeToJsonLogic(child) : null } as RulesLogic;
   }
 
   // Comparison operators
@@ -35,10 +35,10 @@ export function nodeToJsonLogic(node: LogicNode): RulesLogic {
         { var: node.field },
         node.value
       ]
-    };
+    } as RulesLogic;
   }
 
-  return {};
+  return {} as RulesLogic;
 }
 
 /**

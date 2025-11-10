@@ -9,9 +9,12 @@
     "dev:builder": "npm run dev -w @forms-poc/builder",
     "dev:renderer": "npm run dev -w @forms-poc/renderer",
     "build:all": "npm run build --workspaces",
+    "build:django": "npm run build:all && npm run copy:static",
+    "copy:static": "cp packages/builder/dist/index.js packages/backend/forms_builder/static/forms_builder/form-builder.js && cp packages/renderer/dist/index.js packages/backend/forms_builder/static/forms_builder/form-renderer.js",
     "test:all": "npm run test --workspaces"
   },
   "devDependencies": {
+    "@types/json-logic-js": "^2.0.8",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
   }

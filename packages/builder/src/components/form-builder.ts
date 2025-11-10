@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import type {
   FormDefinition,
@@ -20,6 +20,17 @@ import './field-editor';
  */
 @customElement('form-builder')
 export class FormBuilder extends LitElement {
+  @property({ type: Object })
+  set definition(value: FormDefinition | null) {
+    if (value) {
+      this.formDefinition = value;
+    }
+  }
+
+  get definition(): FormDefinition {
+    return this.formDefinition;
+  }
+
   @state()
   private formDefinition: FormDefinition = {
     id: 'form-' + Date.now(),
@@ -43,32 +54,42 @@ export class FormBuilder extends LitElement {
   @state()
   private currentStepIndex = 0;
 
-  @state()
-  private dragOverIndex: number | null = null;
+  /**
+   * Emit definition change event for Django integration
+   */
+  private emitDefinitionChange() {
+    this.dispatchEvent(new CustomEvent('definition-change', {
+      detail: { definition: this.formDefinition },
+      bubbles: true,
+      composed: true
+    }));
+  }
 
   static styles = css`
     :host {
       display: block;
-      height: 100vh;
+      min-height: 600px;
       background-color: #f9fafb;
     }
 
     .builder-container {
       display: grid;
       grid-template-columns: 250px 1fr 300px;
-      height: 100%;
+      min-height: 600px;
       gap: 1rem;
       padding: 1rem;
     }
 
     .builder-sidebar {
       overflow-y: auto;
+      max-height: 800px;
     }
 
     .builder-main {
       display: flex;
       flex-direction: column;
       overflow-y: auto;
+      max-height: 800px;
       background-color: white;
       border: 1px solid #e5e7eb;
       border-radius: 0.5rem;
@@ -77,6 +98,7 @@ export class FormBuilder extends LitElement {
 
     .builder-properties {
       overflow-y: auto;
+      max-height: 800px;
     }
 
     .form-header-editor {
@@ -208,6 +230,16 @@ export class FormBuilder extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      min-height: 200px;
+      padding: 1rem;
+      border: 2px dashed transparent;
+      border-radius: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .field-list.drag-over {
+      border-color: #3b82f6;
+      background-color: #eff6ff;
     }
 
     .field-item {
@@ -276,26 +308,12 @@ export class FormBuilder extends LitElement {
     }
 
     .btn-export {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      padding: 0.75rem 1.5rem;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .btn-export:hover {
-      background-color: #2563eb;
+      display: none;
+      /* Hidden in Django admin - definition is auto-synced */
     }
   `;
 
-  private createField(type: FieldType, stepId: string): FormField {
+  private createField(type: FieldType): FormField {
     const id = `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const name = `${type}_${Date.now()}`;
 
@@ -336,7 +354,6 @@ export class FormBuilder extends LitElement {
   private handleFieldDragEnd(event: DragEvent) {
     const target = event.currentTarget as HTMLElement;
     target.classList.remove('dragging');
-    this.dragOverIndex = null;
   }
 
   private handleDragOver(event: DragEvent) {
@@ -347,6 +364,7 @@ export class FormBuilder extends LitElement {
 
   private handleDropZoneDragEnter(event: DragEvent) {
     event.preventDefault();
+    console.log('Drag entered drop zone');
     const target = event.currentTarget as HTMLElement;
     target.classList.add('drag-over');
   }
@@ -369,10 +387,12 @@ export class FormBuilder extends LitElement {
 
       if (data.fieldType) {
         // Adding new field from palette
-        const newField = this.createField(data.fieldType, currentStep.id);
+        const newField = this.createField(data.fieldType);
         currentStep.fields = [...currentStep.fields, newField];
-        this.selectedField = newField;
+        this.selectedField = { ...newField };
+        console.log('Added new field from palette:', newField);
         this.requestUpdate();
+        this.emitDefinitionChange();
       }
     } catch (error) {
       console.error('Error handling drop:', error);
@@ -396,24 +416,27 @@ export class FormBuilder extends LitElement {
         fields.splice(targetIndex, 0, movedField);
         currentStep.fields = fields;
         this.requestUpdate();
+        this.emitDefinitionChange();
       } else if (data.fieldType) {
         // Add new field at specific position
-        const newField = this.createField(data.fieldType, currentStep.id);
+        const newField = this.createField(data.fieldType);
         const fields = [...currentStep.fields];
         fields.splice(targetIndex, 0, newField);
         currentStep.fields = fields;
-        this.selectedField = newField;
+        this.selectedField = { ...newField };
+        console.log('Added new field at index:', targetIndex, newField);
         this.requestUpdate();
+        this.emitDefinitionChange();
       }
     } catch (error) {
       console.error('Error handling field drop:', error);
     }
-
-    this.dragOverIndex = null;
   }
 
   private handleFieldClick(field: FormField) {
-    this.selectedField = field;
+    console.log('Field clicked:', field);
+    this.selectedField = { ...field };  // Create new reference to trigger change detection
+    this.requestUpdate();
   }
 
   private handleFieldUpdate(event: CustomEvent) {
@@ -424,6 +447,7 @@ export class FormBuilder extends LitElement {
     if (field) {
       (field as any)[property] = value;
       this.requestUpdate();
+      this.emitDefinitionChange();
     }
   }
 
@@ -437,9 +461,12 @@ export class FormBuilder extends LitElement {
     }
 
     this.requestUpdate();
+    this.emitDefinitionChange();
   }
 
   private handleAddStep() {
+
+    this.requestUpdate();
     const newStep: FormStep = {
       id: `step-${Date.now()}`,
       title: `Step ${this.formDefinition.steps.length + 1}`,
@@ -450,6 +477,7 @@ export class FormBuilder extends LitElement {
 
     this.formDefinition.steps = [...this.formDefinition.steps, newStep];
     this.currentStepIndex = this.formDefinition.steps.length - 1;
+    this.emitDefinitionChange();
   }
 
   private handleExport() {
@@ -473,9 +501,10 @@ export class FormBuilder extends LitElement {
             class="form-input"
             .value="${this.formDefinition.title}"
             @input="${(e: Event) => {
-              this.formDefinition.title = (e.target as HTMLInputElement).value;
-              this.requestUpdate();
-            }}"
+        this.formDefinition.title = (e.target as HTMLInputElement).value;
+        this.requestUpdate();
+        this.emitDefinitionChange();
+      }}"
           />
         </div>
 
@@ -486,9 +515,10 @@ export class FormBuilder extends LitElement {
             rows="2"
             .value="${this.formDefinition.description || ''}"
             @input="${(e: Event) => {
-              this.formDefinition.description = (e.target as HTMLTextAreaElement).value;
-              this.requestUpdate();
-            }}"
+        this.formDefinition.description = (e.target as HTMLTextAreaElement).value;
+        this.requestUpdate();
+        this.emitDefinitionChange();
+      }}"
           ></textarea>
         </div>
 
@@ -498,9 +528,10 @@ export class FormBuilder extends LitElement {
             id="multi-step"
             .checked="${this.formDefinition.isMultiStep}"
             @change="${(e: Event) => {
-              this.formDefinition.isMultiStep = (e.target as HTMLInputElement).checked;
-              this.requestUpdate();
-            }}"
+        this.formDefinition.isMultiStep = (e.target as HTMLInputElement).checked;
+        this.requestUpdate();
+        this.emitDefinitionChange();
+      }}"
           />
           <label for="multi-step">Multi-step form</label>
         </div>
@@ -518,9 +549,10 @@ export class FormBuilder extends LitElement {
             <button
               class="step-tab ${index === this.currentStepIndex ? 'active' : ''}"
               @click="${() => {
-                this.currentStepIndex = index;
-                this.selectedField = null;
-              }}"
+        this.currentStepIndex = index;
+        this.selectedField = null;
+        this.requestUpdate();
+      }}"
             >
               ${step.title}
             </button>
@@ -553,11 +585,17 @@ export class FormBuilder extends LitElement {
     }
 
     return html`
-      <div class="field-list">
+      <div
+        class="field-list"
+        @dragover="${this.handleDragOver}"
+        @dragenter="${this.handleDropZoneDragEnter}"
+        @dragleave="${this.handleDropZoneDragLeave}"
+        @drop="${this.handleDrop}"
+      >
         ${repeat(
-          currentStep.fields,
-          (field) => field.id,
-          (field, index) => html`
+      currentStep.fields,
+      (field) => field.id,
+      (field, index) => html`
             <div
               class="field-item ${this.selectedField?.id === field.id ? 'selected' : ''}"
               draggable="true"
@@ -574,7 +612,7 @@ export class FormBuilder extends LitElement {
               </div>
             </div>
           `
-        )}
+    )}
       </div>
     `;
   }
@@ -583,7 +621,23 @@ export class FormBuilder extends LitElement {
     return html`
       <div class="builder-container">
         <div class="builder-sidebar">
-          <field-palette></field-palette>
+          <field-palette
+          @field-drag-start="${(e: CustomEvent) => {
+            console.log('Field drag started from palette:', e.detail.fieldType);            
+          }}"
+          @field-drag-end="${(e: CustomEvent) => {
+            console.log('Field drag ended from palette', e.detail.fieldType);
+          }}"
+            @field-click="${(e: CustomEvent) => {
+              console.log('Field clicked in palette:', e.detail.fieldType);
+              const newField = this.createField(e.detail.fieldType);
+              const currentStep = this.formDefinition.steps[this.currentStepIndex];
+              currentStep.fields = [...currentStep.fields, newField];
+              this.selectedField = { ...newField };
+              this.requestUpdate();
+              this.emitDefinitionChange();
+            }}"
+          ></field-palette>
         </div>
 
         <div class="builder-main">
@@ -593,17 +647,27 @@ export class FormBuilder extends LitElement {
         </div>
 
         <div class="builder-properties">
-          <field-editor
-            .field="${this.selectedField}"
-            @field-update="${this.handleFieldUpdate}"
-            @field-delete="${this.handleFieldDelete}"
-          ></field-editor>
+          ${this.renderFieldEditor()}
         </div>
       </div>
 
       <button class="btn-export" @click="${this.handleExport}">
         Export Form JSON
       </button>
+    `;
+  }
+
+  private renderFieldEditor() {
+    // Force re-render by creating new template each time
+    const field = this.selectedField;
+    console.log('Rendering field editor for:', field);
+
+    return html`
+      <field-editor
+        .field="${field}"
+        @field-update="${this.handleFieldUpdate}"
+        @field-delete="${this.handleFieldDelete}"
+      ></field-editor>
     `;
   }
 }

@@ -9,7 +9,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Django>=4.0',
-        'json-logic>=1.0.0',
+        'json-logic',
     ],
     classifiers=[
         'Environment :: Web Environment',

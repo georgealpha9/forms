@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ form.title }} - Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1f2937;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+        }
+
+        .success-message {
+            display: none;
+            padding: 1.5rem;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .submitted-data {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .submitted-data h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .data-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'admin:forms_builder_formdefinition_change' form.id %}" class="back-link">← Back to Admin</a>
+
+        <div class="header">
+            <h1>{{ form.title }}</h1>
+            {% if form.description %}
+            <p class="subtitle">{{ form.description }}</p>
+            {% endif %}
+        </div>
+
+        <div id="form-container">
+            <!-- Form renderer will be inserted here -->
+        </div>
+
+        <div id="success-message" class="success-message">
+            <h2>✅ Form Submitted Successfully!</h2>
+            <p>Your form data has been submitted.</p>
+            <div id="submitted-data" class="submitted-data"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        async function initFormRenderer() {
+            try {
+                // Import the form renderer
+                await import('/static/forms_builder/form-renderer.js?v=3.0');
+
+                // Wait for custom element to be defined
+                await customElements.whenDefined('form-renderer');
+
+                const container = document.getElementById('form-container');
+                const renderer = document.createElement('form-renderer');
+
+                // Load form definition
+                const formDefinition = JSON.parse('{{ form_definition_json|escapejs }}');
+                renderer.definition = formDefinition;
+
+                // Listen for form submission
+                renderer.addEventListener('form-submit', async (event) => {
+                    const data = event.detail.data;
+                    console.log('Form submitted:', data);
+
+                    try {
+                        // Submit to backend
+                        const response = await fetch('/forms/api/forms/{{ form.id }}/submit/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Hide form
+                            container.style.display = 'none';
+
+                            // Show success message
+                            const successMsg = document.getElementById('success-message');
+                            successMsg.classList.add('show');
+
+                            // Display submitted data
+                            const dataContainer = document.getElementById('submitted-data');
+                            dataContainer.innerHTML = '<h3>Submitted Data:</h3>';
+                            Object.entries(data).forEach(([key, value]) => {
+                                const item = document.createElement('div');
+                                item.className = 'data-item';
+                                item.innerHTML = `<span class="data-label">${key}:</span><span>${value}</span>`;
+                                dataContainer.appendChild(item);
+                            });
+                        } else {
+                            alert('Submission failed: ' + JSON.stringify(result.errors));
+                        }
+                    } catch (error) {
+                        console.error('Submission error:', error);
+                        alert('Failed to submit form: ' + error.message);
+                    }
+                });
+
+                container.appendChild(renderer);
+                console.log('Form renderer initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize form renderer:', error);
+                document.getElementById('form-container').innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: #dc2626;">
+                        <h2>Error Loading Form</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFormRenderer);
+        } else {
+            initFormRenderer();
+        }
+    </script>
+</body>
+</html>
