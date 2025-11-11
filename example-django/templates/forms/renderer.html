@@ -82,7 +82,7 @@
 <!-- Load the form renderer component -->
 <script type="module">
     // In production, this would point to the built bundle
-    import '../../../packages/renderer/src/components/form-renderer.js';
+    import '/static/forms_builder/form-builder.js';
 
     // Get form ID from URL
     const formId = '{{ request.resolver_match.kwargs.form_id }}';

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import type { FormField, TextField, NumberField, TextareaField } from '@forms-poc/shared';
+import './logic/logic-modal';
 
 /**
  * Field property editor
@@ -20,6 +21,10 @@ export class FieldEditor extends LitElement {
   }
 
   private _field: FormField | null = null;
+
+  @property({ attribute: false }) allFields: FormField[] = [];
+
+  @state() private isLogicModalOpen = false;
 
   static styles = css`
     :host {
@@ -116,6 +121,78 @@ export class FieldEditor extends LitElement {
     .btn-delete:hover {
       background-color: #b91c1c;
     }
+
+    .logic-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #e5e7eb;
+    }
+
+    .logic-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .logic-section-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .logic-badge {
+      padding: 0.25rem 0.5rem;
+      background: #3b82f6;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 0.25rem;
+    }
+
+    .logic-badge.empty {
+      background: #9ca3af;
+    }
+
+    .btn-logic {
+      width: 100%;
+      padding: 0.75rem;
+      background: white;
+      color: #3b82f6;
+      border: 2px solid #3b82f6;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .btn-logic:hover {
+      background: #eff6ff;
+    }
+
+    .btn-logic-icon {
+      font-size: 1.125rem;
+    }
+
+    .logic-summary {
+      padding: 0.75rem;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: #4b5563;
+      margin-bottom: 0.75rem;
+      max-height: 100px;
+      overflow-y: auto;
+    }
   `;
 
   private handleChange(property: string, value: any) {
@@ -140,6 +217,23 @@ export class FieldEditor extends LitElement {
       bubbles: true,
       composed: true
     }));
+  }
+
+  private handleOpenLogicModal() {
+    console.log('Opening logic modal for field:', this.field);
+    this.isLogicModalOpen = true;
+    this.requestUpdate();
+  }
+
+  private handleCloseLogicModal() {
+    this.isLogicModalOpen = false;
+  }
+
+  private handleLogicSave(e: CustomEvent) {
+    if (!this.field) return;
+
+    this.handleChange('conditionalLogic', e.detail.logic);
+    this.isLogicModalOpen = false;
   }
 
   private renderCommonProperties() {
@@ -332,13 +426,47 @@ export class FieldEditor extends LitElement {
       `;
     }
 
+    // Get available fields excluding the current field for logic
+    const availableFieldsForLogic = this.allFields.filter(f => f.id !== this.field?.id);
+    const hasLogic = this.field.conditionalLogic && Object.keys(this.field.conditionalLogic).length > 0;
+
     return html`
       <div class="editor-header">Edit Field: ${this.field.type}</div>
       ${this.renderCommonProperties()}
       ${this.renderTypeSpecificProperties()}
+
+      <div class="logic-section">
+        <div class="logic-section-header">
+          <span class="logic-section-title">Conditional Logic</span>
+          <span class="logic-badge ${hasLogic ? '' : 'empty'}">
+            ${hasLogic ? 'Active' : 'None'}
+          </span>
+        </div>
+
+        ${hasLogic ? html`
+          <div class="logic-summary">
+            ${JSON.stringify(this.field.conditionalLogic, null, 2)}
+          </div>
+        ` : ''}
+
+        <button class="btn-logic" @click="${this.handleOpenLogicModal}">
+          <span class="btn-logic-icon">⚙</span>
+          <span>${hasLogic ? 'Edit' : 'Add'} Conditional Logic</span>
+        </button>
+      </div>
+
       <button class="btn-delete" @click="${this.handleDelete}">
         Delete Field
       </button>
+
+      <logic-modal
+        .open="${this.isLogicModalOpen}"
+        .availableFields="${availableFieldsForLogic}"
+        .initialLogic="${this.field.conditionalLogic || null}"
+        .fieldLabel="${this.field.label}"
+        @logic-save="${this.handleLogicSave}"
+        @modal-close="${this.handleCloseLogicModal}"
+      ></logic-modal>
     `;
   }
 }

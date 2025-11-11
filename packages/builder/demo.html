@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Builder - Comprehensive Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: #111827;
+    }
+
+    .demo-info {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .examples-nav {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .examples-nav a {
+      padding: 0.5rem 1rem;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .examples-nav a:hover {
+      background: #2563eb;
+    }
+
+    .examples-nav a.current {
+      background: #1e40af;
+    }
+
+    .demo-info h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+
+    .demo-info p {
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .demo-info ul {
+      margin-left: 1.5rem;
+      color: #6b7280;
+    }
+
+    .demo-info li {
+      margin-bottom: 0.25rem;
+    }
+
+    form-builder {
+      display: block;
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Form Builder - Comprehensive Demo</h1>
+  
+  <div class="examples-nav">
+    <a href="index.html">Basic Example</a>
+    <a href="demo.html" class="current">Comprehensive Demo</a>
+    <a href="multistep.html">Multi-Step Wizard</a>
+  </div>
+  
+  <div class="demo-info">
+    <h2>Demo Features</h2>
+    <p>This demo showcases all available field types and features:</p>
+    <ul>
+      <li><strong>Text Field:</strong> Basic text input with validation (min/max length, pattern)</li>
+      <li><strong>Email Field:</strong> Email validation with conditional logic example</li>
+      <li><strong>Number Field:</strong> Numeric input with min/max/step constraints</li>
+      <li><strong>Textarea Field:</strong> Multi-line text with row configuration</li>
+      <li><strong>Conditional Logic:</strong> Fields with visibility rules based on other field values</li>
+      <li><strong>Multi-step Forms:</strong> Toggle to enable multiple steps</li>
+      <li><strong>Validation Rules:</strong> Required fields, custom validators</li>
+    </ul>
+    <p style="margin-top: 1rem;"><strong>Try:</strong> Click on any field to edit its properties in the right panel. Drag fields to reorder them. Add new fields from the left palette.</p>
+  </div>
+
+  <form-builder id="builder"></form-builder>
+
+  <script type="module">
+    import './dist/index.js';
+
+    // Wait for the web component to be defined
+    customElements.whenDefined('form-builder').then(() => {
+      const builder = document.getElementById('builder');
+      
+      // Comprehensive form definition with all field types and features
+      const comprehensiveForm = {
+        id: 'demo-form-comprehensive',
+        title: 'Comprehensive Form Demo',
+        description: 'This form demonstrates all available field types, validation rules, and conditional logic features.',
+        isMultiStep: false,
+        steps: [
+          {
+            id: 'step-1',
+            title: 'Personal Information',
+            description: 'Basic information fields',
+            order: 0,
+            fields: [
+              {
+                id: 'field-text-name',
+                type: 'text',
+                name: 'full_name',
+                label: 'Full Name',
+                placeholder: 'Enter your full name',
+                required: true,
+                helpText: 'Please enter your first and last name',
+                minLength: 2,
+                maxLength: 100
+              },
+              {
+                id: 'field-email-primary',
+                type: 'email',
+                name: 'email',
+                label: 'Email Address',
+                placeholder: 'you@example.com',
+                required: true,
+                helpText: 'We will never share your email with anyone'
+              },
+              {
+                id: 'field-text-phone',
+                type: 'text',
+                name: 'phone',
+                label: 'Phone Number',
+                placeholder: '+1 (555) 123-4567',
+                pattern: '^[+]?[(]?[0-9]{1,4}[)]?[-\\s\\.]?[(]?[0-9]{1,4}[)]?[-\\s\\.]?[0-9]{1,9}$',
+                helpText: 'International format supported',
+                conditionalLogic: {
+                  "==": [
+                    { "var": "email" },
+                    ""
+                  ]
+                }
+              },
+              {
+                id: 'field-number-age',
+                type: 'number',
+                name: 'age',
+                label: 'Age',
+                placeholder: 'Enter your age',
+                required: true,
+                min: 18,
+                max: 120,
+                step: 1,
+                helpText: 'Must be 18 or older'
+              },
+              {
+                id: 'field-number-salary',
+                type: 'number',
+                name: 'expected_salary',
+                label: 'Expected Salary (USD)',
+                placeholder: '50000',
+                min: 0,
+                max: 1000000,
+                step: 1000,
+                helpText: 'Enter your expected annual salary',
+                conditionalLogic: {
+                  ">=": [
+                    { "var": "age" },
+                    21
+                  ]
+                }
+              },
+              {
+                id: 'field-textarea-bio',
+                type: 'textarea',
+                name: 'bio',
+                label: 'Short Bio',
+                placeholder: 'Tell us about yourself...',
+                rows: 5,
+                minLength: 20,
+                maxLength: 500,
+                helpText: 'Minimum 20 characters, maximum 500 characters'
+              },
+              {
+                id: 'field-text-website',
+                type: 'text',
+                name: 'website',
+                label: 'Website or Portfolio',
+                placeholder: 'https://example.com',
+                pattern: '^https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$',
+                helpText: 'Must be a valid URL starting with http:// or https://'
+              },
+              {
+                id: 'field-textarea-experience',
+                type: 'textarea',
+                name: 'work_experience',
+                label: 'Work Experience',
+                placeholder: 'Describe your relevant work experience...',
+                rows: 8,
+                required: true,
+                minLength: 50,
+                helpText: 'Please provide at least 50 characters'
+              },
+              {
+                id: 'field-text-reference',
+                type: 'text',
+                name: 'reference_name',
+                label: 'Professional Reference',
+                placeholder: 'Reference name',
+                conditionalLogic: {
+                  "and": [
+                    { ">=": [{ "var": "age" }, 25] },
+                    { "!=": [{ "var": "work_experience" }, ""] }
+                  ]
+                },
+                helpText: 'Required for candidates with experience'
+              },
+              {
+                id: 'field-email-reference',
+                type: 'email',
+                name: 'reference_email',
+                label: 'Reference Email',
+                placeholder: 'reference@example.com',
+                conditionalLogic: {
+                  "!=": [
+                    { "var": "reference_name" },
+                    ""
+                  ]
+                },
+                helpText: 'Email of your professional reference'
+              }
+            ]
+          },
+          {
+            id: 'step-2',
+            title: 'Additional Details',
+            description: 'Optional information',
+            order: 1,
+            fields: [
+              {
+                id: 'field-text-linkedin',
+                type: 'text',
+                name: 'linkedin',
+                label: 'LinkedIn Profile',
+                placeholder: 'https://linkedin.com/in/yourprofile'
+              },
+              {
+                id: 'field-textarea-comments',
+                type: 'textarea',
+                name: 'additional_comments',
+                label: 'Additional Comments',
+                placeholder: 'Any additional information you would like to share...',
+                rows: 6
+              }
+            ]
+          }
+        ]
+      };
+
+      // Set the form definition
+      builder.definition = comprehensiveForm;
+
+      // Listen for changes (for Django integration)
+      builder.addEventListener('definition-change', (event) => {
+        console.log('Form definition updated:', event.detail.definition);
+      });
+
+      console.log('Comprehensive demo loaded successfully!');
+    });
+  </script>
+</body>
+</html>

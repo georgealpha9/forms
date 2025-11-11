@@ -3,6 +3,32 @@ import type { RulesLogic } from 'json-logic-js';
 import type { FormData, LogicNode } from './types';
 
 /**
+ * Add custom operators to jsonLogic
+ */
+jsonLogic.add_operation('contains', (a: string, b: string) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  return a.toLowerCase().includes(b.toLowerCase());
+});
+
+jsonLogic.add_operation('startsWith', (a: string, b: string) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  return a.toLowerCase().startsWith(b.toLowerCase());
+});
+
+jsonLogic.add_operation('endsWith', (a: string, b: string) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  return a.toLowerCase().endsWith(b.toLowerCase());
+});
+
+jsonLogic.add_operation('isEmpty', (a: any) => {
+  return a === null || a === undefined || a === '' || (Array.isArray(a) && a.length === 0);
+});
+
+jsonLogic.add_operation('isNotEmpty', (a: any) => {
+  return a !== null && a !== undefined && a !== '' && (!Array.isArray(a) || a.length > 0);
+});
+
+/**
  * Evaluates JSONLogic rules against form data
  */
 export function evaluateLogic(logic: RulesLogic, data: FormData): boolean {
@@ -28,7 +54,14 @@ export function nodeToJsonLogic(node: LogicNode): RulesLogic {
     return { '!': child ? nodeToJsonLogic(child) : null } as RulesLogic;
   }
 
-  // Comparison operators
+  // Unary operators (isEmpty, isNotEmpty)
+  if ((node.operator === 'isEmpty' || node.operator === 'isNotEmpty') && node.field) {
+    return {
+      [node.operator]: [{ var: node.field }]
+    } as RulesLogic;
+  }
+
+  // Binary operators (comparison, string operations)
   if (node.field && node.value !== undefined) {
     return {
       [node.operator]: [
@@ -70,14 +103,27 @@ export function jsonLogicToNode(logic: RulesLogic, id: string = '0'): LogicNode 
     } : null;
   }
 
-  // Comparison operators
-  const comparisonOps = ['==', '!=', '>', '<', '>=', '<='];
-  if (comparisonOps.includes(operator) && Array.isArray(value) && value.length === 2) {
+  // Unary operators
+  const unaryOps = ['isEmpty', 'isNotEmpty'];
+  if (unaryOps.includes(operator) && Array.isArray(value) && value.length === 1) {
+    const [left] = value;
+    if (typeof left === 'object' && left !== null && 'var' in left) {
+      return {
+        id,
+        operator: operator as 'isEmpty' | 'isNotEmpty',
+        field: left.var as string
+      };
+    }
+  }
+
+  // Binary operators (comparison and string operations)
+  const binaryOps = ['==', '!=', '>', '<', '>=', '<=', 'contains', 'startsWith', 'endsWith', 'in'];
+  if (binaryOps.includes(operator) && Array.isArray(value) && value.length === 2) {
     const [left, right] = value;
     if (typeof left === 'object' && left !== null && 'var' in left) {
       return {
         id,
-        operator: operator as '==' | '!=' | '>' | '<' | '>=' | '<=',
+        operator: operator as '==' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'startsWith' | 'endsWith' | 'in',
         field: left.var as string,
         value: right
       };

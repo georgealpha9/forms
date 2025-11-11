@@ -307,6 +307,23 @@ export class FormBuilder extends LitElement {
       color: #111827;
     }
 
+    .field-badges {
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .logic-badge {
+      padding: 0.125rem 0.375rem;
+      background: #3b82f6;
+      color: white;
+      font-size: 0.625rem;
+      font-weight: 600;
+      border-radius: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
     .btn-export {
       display: none;
       /* Hidden in Django admin - definition is auto-synced */
@@ -610,6 +627,11 @@ export class FormBuilder extends LitElement {
                 <div class="field-type">${field.type}</div>
                 <div class="field-label">${field.label}</div>
               </div>
+              ${field.conditionalLogic && Object.keys(field.conditionalLogic).length > 0 ? html`
+                <div class="field-badges">
+                  <span class="logic-badge">Logic</span>
+                </div>
+              ` : ''}
             </div>
           `
     )}
@@ -662,9 +684,14 @@ export class FormBuilder extends LitElement {
     const field = this.selectedField;
     console.log('Rendering field editor for:', field);
 
+    // Get all fields from current step for conditional logic
+    const currentStep = this.formDefinition.steps[this.currentStepIndex];
+    const allFields = currentStep?.fields || [];
+
     return html`
       <field-editor
         .field="${field}"
+        .allFields="${allFields}"
         @field-update="${this.handleFieldUpdate}"
         @field-delete="${this.handleFieldDelete}"
       ></field-editor>

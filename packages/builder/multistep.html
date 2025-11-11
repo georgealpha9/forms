@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Builder - Multi-Step Example</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: #111827;
+    }
+
+    .examples-nav {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .examples-nav a {
+      padding: 0.5rem 1rem;
+      background: #3b82f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 0.375rem;
+      font-weight: 500;
+    }
+
+    .examples-nav a:hover {
+      background: #2563eb;
+    }
+
+    .demo-info {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #10b981;
+    }
+
+    .demo-info h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+
+    .demo-info p {
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    form-builder {
+      display: block;
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Multi-Step Form Example</h1>
+  
+  <div class="examples-nav">
+    <a href="index.html">Basic Example</a>
+    <a href="demo.html">Comprehensive Demo</a>
+    <a href="multistep.html">Multi-Step (Current)</a>
+  </div>
+
+  <div class="demo-info">
+    <h2>Multi-Step Wizard Form</h2>
+    <p>This example demonstrates a multi-step form with:</p>
+    <ul style="margin-left: 1.5rem; color: #6b7280;">
+      <li>Step 1: Personal Information</li>
+      <li>Step 2: Employment Details</li>
+      <li>Step 3: Additional Information</li>
+      <li>Conditional fields based on previous answers</li>
+    </ul>
+  </div>
+
+  <form-builder id="builder"></form-builder>
+
+  <script type="module">
+    import './dist/index.js';
+
+    customElements.whenDefined('form-builder').then(() => {
+      const builder = document.getElementById('builder');
+      
+      const multiStepForm = {
+        id: 'multistep-wizard',
+        title: 'Job Application Wizard',
+        description: 'Complete all steps to submit your application',
+        isMultiStep: true,
+        steps: [
+          {
+            id: 'step-personal',
+            title: 'Personal Information',
+            description: 'Tell us about yourself',
+            order: 0,
+            fields: [
+              {
+                id: 'field-firstname',
+                type: 'text',
+                name: 'first_name',
+                label: 'First Name',
+                placeholder: 'John',
+                required: true,
+                maxLength: 50
+              },
+              {
+                id: 'field-lastname',
+                type: 'text',
+                name: 'last_name',
+                label: 'Last Name',
+                placeholder: 'Doe',
+                required: true,
+                maxLength: 50
+              },
+              {
+                id: 'field-email',
+                type: 'email',
+                name: 'email',
+                label: 'Email Address',
+                placeholder: 'john.doe@example.com',
+                required: true,
+                helpText: 'We will send confirmation to this email'
+              },
+              {
+                id: 'field-age',
+                type: 'number',
+                name: 'age',
+                label: 'Age',
+                placeholder: '25',
+                required: true,
+                min: 18,
+                max: 100,
+                helpText: 'You must be 18 or older to apply'
+              }
+            ]
+          },
+          {
+            id: 'step-employment',
+            title: 'Employment Details',
+            description: 'Your work experience',
+            order: 1,
+            fields: [
+              {
+                id: 'field-current-title',
+                type: 'text',
+                name: 'current_job_title',
+                label: 'Current/Most Recent Job Title',
+                placeholder: 'Software Engineer',
+                required: true
+              },
+              {
+                id: 'field-years-exp',
+                type: 'number',
+                name: 'years_experience',
+                label: 'Years of Experience',
+                placeholder: '5',
+                min: 0,
+                max: 50,
+                step: 0.5,
+                helpText: 'Total years in your field'
+              },
+              {
+                id: 'field-desired-salary',
+                type: 'number',
+                name: 'desired_salary',
+                label: 'Desired Salary (Annual USD)',
+                placeholder: '75000',
+                min: 0,
+                max: 500000,
+                step: 5000,
+                conditionalLogic: {
+                  ">=": [
+                    { "var": "years_experience" },
+                    1
+                  ]
+                },
+                helpText: 'Only shown for applicants with experience'
+              },
+              {
+                id: 'field-work-summary',
+                type: 'textarea',
+                name: 'work_summary',
+                label: 'Brief Work Summary',
+                placeholder: 'Describe your key responsibilities and achievements...',
+                rows: 6,
+                required: true,
+                minLength: 50,
+                maxLength: 1000,
+                helpText: 'Minimum 50 characters'
+              }
+            ]
+          },
+          {
+            id: 'step-additional',
+            title: 'Additional Information',
+            description: 'Final details',
+            order: 2,
+            fields: [
+              {
+                id: 'field-portfolio',
+                type: 'text',
+                name: 'portfolio_url',
+                label: 'Portfolio/Website URL',
+                placeholder: 'https://yourportfolio.com',
+                pattern: '^https?:\\/\\/.+',
+                helpText: 'Optional - must start with http:// or https://'
+              },
+              {
+                id: 'field-linkedin',
+                type: 'text',
+                name: 'linkedin_url',
+                label: 'LinkedIn Profile',
+                placeholder: 'https://linkedin.com/in/yourprofile',
+                pattern: '^https?:\\/\\/(www\\.)?linkedin\\.com\\/.+',
+                helpText: 'Optional - LinkedIn profile URL'
+              },
+              {
+                id: 'field-references',
+                type: 'textarea',
+                name: 'references',
+                label: 'Professional References',
+                placeholder: 'Name, Company, Email (one per line)...',
+                rows: 5,
+                conditionalLogic: {
+                  ">=": [
+                    { "var": "years_experience" },
+                    2
+                  ]
+                },
+                helpText: 'Required for applicants with 2+ years experience'
+              },
+              {
+                id: 'field-cover-letter',
+                type: 'textarea',
+                name: 'cover_letter',
+                label: 'Cover Letter',
+                placeholder: 'Why are you interested in this position?',
+                rows: 10,
+                minLength: 100,
+                maxLength: 2000,
+                helpText: 'Tell us why you are the right fit (100-2000 characters)'
+              },
+              {
+                id: 'field-start-date',
+                type: 'text',
+                name: 'available_start_date',
+                label: 'When can you start?',
+                placeholder: 'e.g., Immediately, 2 weeks, 1 month',
+                required: true
+              }
+            ]
+          }
+        ]
+      };
+
+      builder.definition = multiStepForm;
+      
+      builder.addEventListener('definition-change', (event) => {
+        console.log('Multi-step form updated:', event.detail.definition);
+      });
+
+      console.log('Multi-step wizard loaded!');
+    });
+  </script>
+</body>
+</html>

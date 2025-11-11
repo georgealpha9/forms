@@ -129,7 +129,7 @@ export interface ValidationResult {
  */
 export interface LogicNode {
   id: string;
-  operator: 'and' | 'or' | 'not' | '==' | '!=' | '>' | '<' | '>=' | '<=';
+  operator: 'and' | 'or' | 'not' | '==' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'startsWith' | 'endsWith' | 'isEmpty' | 'isNotEmpty' | 'in';
   children?: LogicNode[];
   field?: string;
   value?: FieldValue;
